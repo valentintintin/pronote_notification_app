@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "651561724123",
+    "project_id": "pronote-notification-37872",
+    "storage_bucket": "pronote-notification-37872.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651561724123:android:058ed188234b8f7514c4fe",
+        "android_client_info": {
+          "package_name": "fr.valentin_saugnier.pronote_notification"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "651561724123-gvmhuk2nidubq64paf0iaqk1ojmesvas.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvCFuR21tf0U06rS1uNtGttiEl5iboAVE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "651561724123-gvmhuk2nidubq64paf0iaqk1ojmesvas.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
