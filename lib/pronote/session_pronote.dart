@@ -76,7 +76,7 @@ class SessionPronote {
     DonneesConnexion connexion = await _authPronoteByChallenge(donneesChallenge.challenge!, computeLoginKey);
     
     if (connexion.cle == null) {
-      throw Exception('Authentification ratée');
+      throw Exception('Authentification Pronote échouée');
     }
 
     _aesKey = _computeKeyFromChallengeResult(connexion.cle!, computeLoginKey);
@@ -92,7 +92,7 @@ class SessionPronote {
     Response response = await _sessionHttp.get(_casUrl);
 
     if (response.statusCode >= 400) {
-      throw Exception('Impossible d\'accéder à l\'académie');
+      throw Exception('Impossible d\'accéder à la page de connexion de l\'académie');
     }
 
     Document document = parse(response.body);
@@ -110,7 +110,7 @@ class SessionPronote {
     response = await _sessionHttp.post(url, map);
 
     if (response.statusCode >= 400) {
-      throw Exception('Impossible de se connecter à l\'académie');
+      throw Exception('Impossible de se connecter avec vos identifiants l\'académie');
     }
   }
 
@@ -118,7 +118,7 @@ class SessionPronote {
     Response response = await _sessionHttp.get(_pronoteUrl + 'eleve.html?fd=1'); // TODO URI
 
     if (response.statusCode >= 400) {
-      throw Exception('Impossible de récupérer les clés de Pronote');
+      throw Exception('Impossible de récupérer les clés sur Pronote');
     }
 
     String responseBody = response.body;
@@ -130,7 +130,7 @@ class SessionPronote {
     int startJsonIndex = body.indexOf(from);
     int endJsonIndex = body.indexOf(to);
     if (startJsonIndex == -1 || endJsonIndex == -1) {
-      throw Exception('Connexion impossible à Pronote');
+      throw Exception('Impossible de récupérer les identifiants sur Pronote');
     }
 
     String cipherAccountJsonRaw = body
@@ -236,7 +236,7 @@ class SessionPronote {
         donneesSec: content ?? RequestDonneesSec()
     );
 
-    print(name + ' ' + _nbRequest.toString());
+    debugPrint(name + ' ' + _nbRequest.toString());
     
     Response response = await _sessionHttp.post(url, data.toRawJson());
 
@@ -331,7 +331,7 @@ class SessionPronote {
       result[i] = int.parse(split[i]);
     }
     
-    print('Clé : ' + data + ' soit ' + _listToString(result));
+    debugPrint('Clé : ' + data + ' soit ' + _listToString(result));
     
     return result;
   }

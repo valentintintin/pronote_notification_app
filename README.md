@@ -17,3 +17,5 @@ Je n'ai cepandant pas fais tous les modes d'échanges avec Pronote donc à vous 
 
 - Le nommage des variables laisse à désirer (un coup en anglais et un autre en français).
 - Les modèles (classes) sont à réorganiser
+- Déplacer la logique dans une classe dédiée
+- Utiliser des Stream

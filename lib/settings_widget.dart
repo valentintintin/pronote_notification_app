@@ -1,6 +1,11 @@
+import 'dart:io';
+import 'dart:isolate';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:pronote_notification/main.dart';
 import 'package:pronote_notification/pronote/models/response/page_accueil.dart';
 import 'package:pronote_notification/pronote/session_pronote.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,9 +21,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   final _formKey = GlobalKey<FormState>();
 
   final List<DropdownMenuItem<String>> pronoteUrls = {
-    'Choix de l\'Établissement': '',
-    'Lycée Léonard de Vinci - Villefontaine': 'https://0382440w.index-education.net/pronote/',
+    'Établissement *': '',
     'Collège Fernand Bouvier - Saint Jean de Bournay': 'https://0382265f.index-education.net/pronote/',
+    'Lycée Léonard de Vinci - Villefontaine': 'https://0382440w.index-education.net/pronote/',
   }.entries.map((e) => DropdownMenuItem(
     child: Text(e.key),
     value: e.value,
@@ -68,50 +73,58 @@ class _SettingsWidgetState extends State<SettingsWidget> {
         future: getSharedPreferences(),
         builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
           if (snapshot.hasData) {
-            return Column(
-                children: [
-                  Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: TextFormField(
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  icon: Icon(Icons.person),
-                                  labelText: 'Identifiant *',
-                                ),
-                                keyboardType: TextInputType.emailAddress,
-                                initialValue: username,
-                                onSaved: (value) => username = value?.toLowerCase(),
-                                validator: (value) =>
-                                value == null || value.isEmpty
-                                    ? 'Votre identifiant est requis'
-                                    : null
-                            ),
-                          ),
-                          Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: TextFormField(
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(),
-                                    icon: Icon(Icons.security),
-                                    labelText: 'Mot de passe *',
+            return
+              Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Text('Vos informations', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+                        ),
+                        Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: TextFormField(
+                                      decoration: const InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        icon: Icon(Icons.person),
+                                        labelText: 'Identifiant *',
+                                      ),
+                                      keyboardType: TextInputType.emailAddress,
+                                      initialValue: username,
+                                      onSaved: (value) => username = value?.toLowerCase(),
+                                      validator: (value) =>
+                                      value == null || value.isEmpty
+                                          ? 'Votre identifiant est requis'
+                                          : null
                                   ),
-                                  keyboardType: TextInputType.visiblePassword,
-                                  obscureText: true,
-                                  initialValue: password,
-                                  onSaved: (value) => password = value,
-                                  validator: (value) =>
-                                  value == null || value.isEmpty
-                                      ? 'Votre mot de passe est requis'
-                                      : null
-                              )
-                          ),
-                          Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: 
+                                ),
+                                Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: TextFormField(
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          icon: Icon(Icons.security),
+                                          labelText: 'Mot de passe *',
+                                        ),
+                                        keyboardType: TextInputType.visiblePassword,
+                                        obscureText: true,
+                                        initialValue: password,
+                                        onSaved: (value) => password = value,
+                                        validator: (value) =>
+                                        value == null || value.isEmpty
+                                            ? 'Votre mot de passe est requis'
+                                            : null
+                                    )
+                                ),
+                                Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child:
                                     DropdownButtonFormField(
                                         isExpanded: true,
                                         iconSize: 24,
@@ -126,59 +139,66 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                             ? 'Votre établissement est requis'
                                             : null
                                     )
-                          ),
-                          Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Row(
-                                  children: [
-                                    const Text('Activer la vérification des nouvelles notes'),
-                                    Checkbox(
-                                      value: check,
-                                      onChanged: (bool? value) {
-                                        setState(() {
-                                          check = value!;
-                                        });
-                                      },
+                                ),
+                                Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Text('Activer la vérification des nouvelles notes'),
+                                          Checkbox(
+                                            value: check,
+                                            onChanged: (bool? value) {
+                                              setState(() {
+                                                check = value!;
+                                              });
+                                            },
+                                          )
+                                        ]
                                     )
-                                  ]
-                              )
-                          ),
-                          loadingInProgress ? const Text('Connexion en cours ...') : Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  _authPronote(false);
-                                },
-                                child: const Text('Enregistrer'),
-                              )
-                          ),
-                          kDebugMode ? loadingInProgress ? const Text('Connexion en cours ...') : Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  _authPronote(true);
-                                },
-                                child: const Text('Tester'),
-                              )
-                          ) : Container(),
-                          kDebugMode ? Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  final prefs = await SharedPreferences.getInstance();
-                                  await prefs.clear();
-                                },
-                                child: const Text('Reset'),
-                              )
-                          ) : Container(),
-                        ],
-                      )
-                  ),
-                  isConnected ? Text('Utilisateur : ' + (userFullName ?? '-')) : Container(),
-                  isConnected ? Text('Établissement : ' + (schoolName ?? '-')) : Container(),
-                  isConnected ? Text('Dernière note : ' + (lastMarks ?? '-')) : Container(),
-                ]
-            );
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    loadingInProgress ? const Text('Connexion en cours ...') : Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            _authPronote(false);
+                                          },
+                                          child: const Text('Enregistrer'),
+                                        )
+                                    ),
+                                    kDebugMode ? loadingInProgress ? const Text('Connexion en cours ...') : Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            _authPronote(true);
+                                          },
+                                          child: const Text('Tester'),
+                                        )
+                                    ) : Container(),
+                                    kDebugMode ? Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            final prefs = await SharedPreferences.getInstance();
+                                            await prefs.clear();
+                                          },
+                                          child: const Text('Reset'),
+                                        )
+                                    ) : Container(),
+                                  ],
+                                )
+                              ],
+                            )
+                        ),
+                        isConnected ? Text('Utilisateur : ' + (userFullName ?? '-'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),) : Container(),
+                        isConnected ? Text('Établissement : ' + (schoolName ?? '-'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),) : Container(),
+                        isConnected ? Text('Dernière note : ' + (lastMarks ?? '-'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),) : Container(),
+                      ]
+                  )
+              );
           }
 
           return const Center(child: CircularProgressIndicator());
@@ -189,6 +209,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   Future<void> _authPronote(bool fake) async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+
+      if (!Platform.isLinux && await FlutterForegroundTask.isRunningService) {
+        await FlutterForegroundTask.stopService();
+      }
 
       setState(() {
         isConnected = false;
@@ -208,7 +232,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       prefs.remove('lastMarksId');
 
       if (!check) {
-        print('Pas de test');
+        print('Pas de vérification');
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ok, plus de vérification')),
@@ -226,18 +250,31 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       try {
         await sessionPronote.auth(username!, password!);
 
+        userFullName = sessionPronote.user.userFullName;
+        schoolName = sessionPronote.user.etablissement?.etablissement?.name;
+
+        Devoir? devoir = sessionPronote.homePage.notes?.listeDevoirs?.devoirs?.last;
+
+        if (devoir != null && devoir.note?.valeur != null) {
+          lastMarks = devoir.toString();
+          prefs.setString('lastMarksId', lastMarks!);
+        }
+
         setState(() {
           isConnected = true;
-
-          userFullName = sessionPronote.user.userFullName;
-          schoolName = sessionPronote.user.etablissement?.etablissement?.name;
-
-          Devoir? devoir = sessionPronote.homePage.notes?.listeDevoirs?.devoirs?.last;
-          if (devoir != null && devoir.note?.valeur != null) {
-            lastMarks = devoir.toString();
-            prefs.setString('lastMarksId', lastMarks!);
-          }
         });
+
+        if (!Platform.isLinux) {
+          ReceivePort? receivePort = await FlutterForegroundTask.startService(
+            notificationTitle: 'Vérification des notes en arrière plan',
+            notificationText: lastMarks != null ? 'Dernière note : ' + lastMarks! : 'Aucune note',
+            callback: startCallback,
+          );
+
+          if (receivePort == null) {
+            throw Exception('Impossible de mettre en place le service en arrière plan');
+          }
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Connexion réussie !')),
@@ -248,7 +285,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           barrierDismissible: false, // user must tap button!
           builder: (BuildContext context) {
             return AlertDialog(
-              title: const Text('AlertDialog Title'),
+              title: const Text('Erreur'),
               content: SingleChildScrollView(
                 child: ListBody(
                   children: <Widget>[

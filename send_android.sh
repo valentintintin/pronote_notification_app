@@ -1,0 +1,1 @@
+./build_android.sh && ./send_adb.sh

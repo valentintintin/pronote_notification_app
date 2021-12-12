@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
@@ -11,14 +12,14 @@ class SessionHttp {
   Map<String, String> headers = {};
 
   Future<http.Response> get(String url) async {
-    print('Request GET ' + url);
+    debugPrint('Request GET ' + url);
     http.Response response = await (useFake ? _doFake('GET', url) : http.get(Uri.parse(url), headers: headers));
     updateCookie(response);
     return response;
   }
 
   Future<http.Response> post(String url, dynamic data) async {
-    print('Request POST ' + url + ' ' + (data?.toString() ?? ''));
+    debugPrint('Request POST ' + url + ' ' + (data?.toString() ?? ''));
     http.Response response = await (useFake ? _doFake('POST', url, data: data) : http.post(Uri.parse(url), body: data, headers: headers));
     updateCookie(response);
     return response;
@@ -29,7 +30,7 @@ class SessionHttp {
 
     try {
       String requestBody = await rootBundle.loadString('assets/fakes/' + number.toString() + '_request.json');
-      print('Request wanted ' + method + ' ' + url + ' ' + requestBody);
+      debugPrint('Request wanted ' + method + ' ' + url + ' ' + requestBody);
     } catch (e) {
       // ignored
     }
@@ -45,7 +46,7 @@ class SessionHttp {
   }
 
   void updateCookie(http.Response response) {
-    print('Response ' + response.request.toString() + ' ' + response.statusCode.toString() + ' ' + (response.body.length > 1000 ? response.body.substring(0, 1000) : response.body));
+    debugPrint('Response ' + response.request.toString() + ' ' + response.statusCode.toString() + ' ' + (response.body.length > 1000 ? response.body.substring(0, 1000) : response.body));
     
     String? rawCookie = response.headers['set-cookie'];
     if (rawCookie != null) {
@@ -57,12 +58,12 @@ class SessionHttp {
         return;
       }
       
-      print('COOKIE : ' + response.request.toString() + ' ' + cookie);
+      debugPrint('COOKIE : ' + response.request.toString() + ' ' + cookie);
 
       headers['cookie'] = cookie;
     }
     
-    print('');
+    debugPrint('');
   }
   
   bool hasCookie() {
