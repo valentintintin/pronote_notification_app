@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:pronote_notification/pronote/models/request_data.dart';
-import 'package:pronote_notification/pronote/models/response/objet_nom.dart';
+import 'package:pronote_notification/pronote/models/response/name_object.dart';
 
 class DonneesParamsUser extends JsonObject {
   DonneesParamsUser({
@@ -32,7 +32,7 @@ class ParamsUserRessource extends JsonObject {
     this.g,
     this.p,
     this.classeDEleve,
-    this.etablissement,
+    this.school,
     this.listeOngletsPourPeriodes,
   });
 
@@ -40,8 +40,8 @@ class ParamsUserRessource extends JsonObject {
   final String? ine;
   final int? g;
   final int? p;
-  final ObjetNom? classeDEleve;
-  final Etablissement? etablissement;
+  final NameObject? classeDEleve;
+  final Etablissement? school;
   final ListeOngletsPourPeriodes? listeOngletsPourPeriodes;
 
   factory ParamsUserRessource.fromRawJson(String str) => ParamsUserRessource.fromJson(json.decode(str));
@@ -54,8 +54,8 @@ class ParamsUserRessource extends JsonObject {
     ine: json["N"],
     g: json["G"],
     p: json["P"],
-    classeDEleve: json["classeDEleve"] == null ? null : ObjetNom.fromJson(json["classeDEleve"]),
-    etablissement: json["Etablissement"] == null ? null : Etablissement.fromJson(json["Etablissement"]),
+    classeDEleve: json["classeDEleve"] == null ? null : NameObject.fromJson(json["classeDEleve"]),
+    school: json["Etablissement"] == null ? null : Etablissement.fromJson(json["Etablissement"]),
     listeOngletsPourPeriodes: json["listeOngletsPourPeriodes"] == null ? null : ListeOngletsPourPeriodes.fromJson(json["listeOngletsPourPeriodes"]),
   );
 
@@ -66,7 +66,7 @@ class ParamsUserRessource extends JsonObject {
     "G": g,
     "P": p,
     "classeDEleve": classeDEleve == null ? null : classeDEleve!.toJson(),
-    "Etablissement": etablissement == null ? null : etablissement!.toJson(),
+    "Etablissement": school == null ? null : school!.toJson(),
     "listeOngletsPourPeriodes": listeOngletsPourPeriodes == null ? null : listeOngletsPourPeriodes!.toJson(),
   };
 }
@@ -74,11 +74,11 @@ class ParamsUserRessource extends JsonObject {
 class Etablissement extends JsonObject {
   Etablissement({
     this.t,
-    this.etablissement,
+    this.nameValue,
   });
 
   final int? t;
-  final ObjetNom? etablissement;
+  final NameObject? nameValue;
 
   factory Etablissement.fromRawJson(String str) => Etablissement.fromJson(json.decode(str));
 
@@ -87,13 +87,13 @@ class Etablissement extends JsonObject {
 
   factory Etablissement.fromJson(Map<String, dynamic> json) => Etablissement(
     t: json["_T"],
-    etablissement: json["V"] == null ? null : ObjetNom.fromJson(json["V"]),
+    nameValue: json["V"] == null ? null : NameObject.fromJson(json["V"]),
   );
 
   @override
   Map<String, dynamic> toJson() => {
     "_T": t,
-    "V": etablissement == null ? null : etablissement!.toJson(),
+    "V": nameValue == null ? null : nameValue!.toJson(),
   };
 }
 
@@ -160,7 +160,7 @@ class ListePeriodes extends JsonObject {
   });
 
   final int? t;
-  final List<ObjetNom>? periodes;
+  final List<NameObject>? periodes;
 
   factory ListePeriodes.fromRawJson(String str) => ListePeriodes.fromJson(json.decode(str));
 
@@ -169,7 +169,7 @@ class ListePeriodes extends JsonObject {
 
   factory ListePeriodes.fromJson(Map<String, dynamic> json) => ListePeriodes(
     t: json["_T"],
-    periodes: json["V"] == null ? null : List<ObjetNom>.from(json["V"].map((x) => ObjetNom.fromJson(x))),
+    periodes: json["V"] == null ? null : List<NameObject>.from(json["V"].map((x) => NameObject.fromJson(x))),
   );
 
   @override

@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:pronote_notification/pronote/models/request_data.dart';
 
-class ObjetNom extends JsonObject {
-  ObjetNom({
+class NameObject extends JsonObject {
+  NameObject({
     this.name,
     this.id,
   });
@@ -11,12 +11,12 @@ class ObjetNom extends JsonObject {
   final String? name;
   final String? id;
 
-  factory ObjetNom.fromRawJson(String str) => ObjetNom.fromJson(json.decode(str));
+  factory NameObject.fromRawJson(String str) => NameObject.fromJson(json.decode(str));
 
   @override
   String toRawJson() => json.encode(toJson());
 
-  factory ObjetNom.fromJson(Map<String, dynamic> json) => ObjetNom(
+  factory NameObject.fromJson(Map<String, dynamic> json) => NameObject(
     name: json["L"],
     id: json["N"],
   );

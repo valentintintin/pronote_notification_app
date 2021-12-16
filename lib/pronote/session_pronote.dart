@@ -18,7 +18,7 @@ import 'package:pronote_notification/pronote/models/requests/params.dart';
 import 'package:pronote_notification/pronote/models/response/challenge.dart';
 import 'package:pronote_notification/pronote/models/response/connexion.dart';
 import 'package:pronote_notification/pronote/models/response/info.dart';
-import 'package:pronote_notification/pronote/models/response/page_accueil.dart';
+import 'package:pronote_notification/pronote/models/response/home_page.dart';
 import 'package:pronote_notification/pronote/models/response/params_user.dart';
 import 'package:pronote_notification/pronote/session_http.dart';
 
@@ -43,7 +43,7 @@ class SessionPronote {
   // public
   late DonneesInfo params;
   late ParamsUserRessource user;
-  late DonneesPageAccueil homePage;
+  late HomePage homePage;
   
   // private
   late final SessionHttp _sessionHttp;
@@ -62,6 +62,7 @@ class SessionPronote {
   
   int _nbRequest = 1;
   int _currentPage = 7;
+  bool isAuthenticated = false;
 
   Future<void> auth(String username, String password) async {
     await _authCas(username, password);
@@ -73,19 +74,54 @@ class SessionPronote {
     DonneesChallenge donneesChallenge = await _getChallengePronote();
     Uint8List computeLoginKey = _computeLoginKey(_cipherAccount.password!, donneesChallenge.alea);
 
-    DonneesConnexion connexion = await _authPronoteByChallenge(donneesChallenge.challenge!, computeLoginKey);
+    DonneesConnexion connection = await _authPronoteByChallenge(donneesChallenge.challenge!, computeLoginKey);
     
-    if (connexion.cle == null) {
+    if (connection.cle == null) {
       throw Exception('Authentification Pronote échouée');
     }
 
-    _aesKey = _computeKeyFromChallengeResult(connexion.cle!, computeLoginKey);
+    _aesKey = _computeKeyFromChallengeResult(connection.cle!, computeLoginKey);
 
     user = await _getParamsUser();
 
     await _navigate(7);
     
     homePage = await _getHomePage();
+    
+    isAuthenticated = true;
+  }
+  
+  String getUserFullName() {
+    _checkIsAuthenticated();
+
+    return user.userFullName!; 
+  }
+  
+  String? getSchoolName() {
+    _checkIsAuthenticated();
+
+    return user.school?.nameValue?.name; 
+  }
+
+  Exam? getLastMark() {
+    _checkIsAuthenticated();
+    
+    Exam? lastMark = homePage.exams?.examsList?.exams?.last;
+    if (lastMark != null && lastMark.mark?.valeur != null) {
+      print('Dernière note : ' + lastMark.toString());
+
+      return lastMark;
+    }
+
+    print('Aucune note');
+    
+    return null;
+  }
+  
+  void _checkIsAuthenticated() {
+    if (!isAuthenticated) {
+      throw Exception("Vous n\'etes pas connecté !");
+    }
   }
 
   Future<void> _authCas(String username, String password) async {
@@ -97,7 +133,7 @@ class SessionPronote {
 
     Document document = parse(response.body);
 
-    String url = _casUrl + document.querySelector('form')!.attributes['action']!; // TODO URI
+    String url = _casUrl + document.querySelector('form')!.attributes['action']!; // TODO URI builder
     List<Element> inputs = document.querySelectorAll('input');
     Map<String?, String?> map = {
       for (Element e in inputs) e.attributes['name']: e.attributes['value']
@@ -115,7 +151,7 @@ class SessionPronote {
   }
 
   Future<CipherAccount> _getCipherFromPronote() async {
-    Response response = await _sessionHttp.get(_pronoteUrl + 'eleve.html?fd=1'); // TODO URI
+    Response response = await _sessionHttp.get(_pronoteUrl + 'eleve.html'); // TODO URI builder
 
     if (response.statusCode >= 400) {
       throw Exception('Impossible de récupérer les clés sur Pronote');
@@ -215,19 +251,19 @@ class SessionPronote {
     _currentPage = pageIndex;
   }
 
-  Future<DonneesPageAccueil> _getHomePage() async {
+  Future<HomePage> _getHomePage() async {
     String response = await request('PageAccueil', RequestDonneesSec(
         signature: RequestDonneesSignature(
           onglet: _currentPage
         ) 
     ));
 
-    return RequestData<DonneesPageAccueil>.fromRawJson(response, (json) => DonneesPageAccueil.fromJson(json)).donneesSec!.donnees!;
+    return RequestData<HomePage>.fromRawJson(response, (json) => HomePage.fromJson(json)).donneesSec!.donnees!;
   }
 
   Future<String> request(String name, RequestDonneesSec? content) async {
     String order = _cipher(_nbRequest.toString(), disableIv: _nbRequest == 1);
-    String url = _pronoteUrl + 'appelfonction/' + _cipherAccount.accountTypeId.toString() + '/' + _cipherAccount.sessionId.toString() + '/' + order;  // TODO URI
+    String url = _pronoteUrl + 'appelfonction/' + _cipherAccount.accountTypeId.toString() + '/' + _cipherAccount.sessionId.toString() + '/' + order;  // TODO URI builder
 
     RequestData data = RequestData(
         nom: name,
@@ -259,13 +295,6 @@ class SessionPronote {
   }
 
   Uint8List _pad(Uint8List bytes, int blockSizeBytes) {
-    // The PKCS #7 padding just fills the extra bytes with the same value.
-    // That value is the number of bytes of padding there is.
-    //
-    // For example, something that requires 3 bytes of padding with append
-    // [0x03, 0x03, 0x03] to the bytes. If the bytes is already a multiple of the
-    // block size, a full block of padding is added.
-
     final padLength = blockSizeBytes - (bytes.length % blockSizeBytes);
 
     final padded = Uint8List(bytes.length + padLength)..setAll(0, bytes);
