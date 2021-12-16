@@ -63,7 +63,7 @@ class ExamsList extends JsonObject {
 
   factory ExamsList.fromJson(Map<String, dynamic> json) => ExamsList(
     t: json["_T"],
-    exams: json["V"] == null ? null : List<Exam>.from(json["V"].map((x) => Exam.fromJson(x))),
+    exams: json["V"] == null ? null : List<Exam>.from(json["V"].map((x) => Exam.fromJson(x))).reversed.toList(),
   );
 
   @override
@@ -71,6 +71,11 @@ class ExamsList extends JsonObject {
     "_T": t,
     "V": exams == null ? null : List<dynamic>.from(exams!.map((x) => x.toJson())),
   };
+
+  @override
+  String toString() {
+    return exams == null ? '' : exams!.map((e) => e.toString()).join('\n');
+  }
 }
 
 class Exam extends JsonObject {
@@ -81,7 +86,7 @@ class Exam extends JsonObject {
     this.scale,
     this.defaultScale,
     this.date,
-    this.Course,
+    this.course,
     this.period,
   });
 
@@ -91,7 +96,7 @@ class Exam extends JsonObject {
   final ValueObject? scale;
   final ValueObject? defaultScale;
   final ValueObject? date;
-  final Service? Course;
+  final Service? course;
   final Period? period;
 
   factory Exam.fromRawJson(String str) => Exam.fromJson(json.decode(str));
@@ -106,7 +111,7 @@ class Exam extends JsonObject {
     scale: json["bareme"] == null ? null : ValueObject.fromJson(json["bareme"]),
     defaultScale: json["baremeParDefaut"] == null ? null : ValueObject.fromJson(json["baremeParDefaut"]),
     date: json["date"] == null ? null : ValueObject.fromJson(json["date"]),
-    Course: json["service"] == null ? null : Service.fromJson(json["service"]),
+    course: json["service"] == null ? null : Service.fromJson(json["service"]),
     period: json["periode"] == null ? null : Period.fromJson(json["periode"]),
   );
 
@@ -118,34 +123,51 @@ class Exam extends JsonObject {
     "bareme": scale == null ? null : scale!.toJson(),
     "baremeParDefaut": defaultScale == null ? null : defaultScale!.toJson(),
     "date": date == null ? null : date!.toJson(),
-    "service": Course == null ? null : Course!.toJson(),
+    "service": course == null ? null : course!.toJson(),
     "periode": period == null ? null : period!.toJson(),
   };
 
+  String getMarkValue() {
+    String? markString = mark?.value?.replaceAll(',', '.');
+    
+    if (markString == '|1') {
+      return 'absent';
+    }
+    
+    try {
+      double? markValue = double.parse(markString!);
+      
+      if (scale?.value != null && defaultScale?.value != null && scale!.value != defaultScale!.value) {
+        try {
+          double scaleValue = double.parse(scale!.value!);
+          double defaultScaleValue = double.parse(defaultScale!.value!);
+          
+          return (markValue * defaultScaleValue / scaleValue).toStringAsFixed(2) + '/' + defaultScale!.value! + ' (' + markValue.toString() + '/' + scale!.value! + ')';
+        } catch(e) {
+          return markValue.toString() + '/' + scale!.value!;  
+        }
+      } else if (scale?.value != null) {
+        return markValue.toString() + '/' + scale!.value!;
+      } else if (defaultScale?.value != null) {
+        return markValue.toString() + '/' + defaultScale!.value!;
+      }
+      
+      return markValue.toString();
+    } catch(e) {
+      throw Exception('Note incorrect pour le devoir. ' + e.toString());
+    }
+  }
+  
   @override
   String toString() {
-    String result = '';
+    String result = getMarkValue();
     
-    String? noteValue = mark?.valeur;
-    
-    if (noteValue == '|1') {
-      result += 'absent';
-    } else if (noteValue != null) {
-      result += noteValue;
-
-      if (scale?.valeur != null) {
-        result += '/' + scale!.valeur!;
-      }
-    } else {
-      throw Exception('Données incorrects pour le devoir');
+    if (course?.service?.name != null) {
+      result += ' en ' + course!.service!.name!;
     }
     
-    if (Course?.service?.name != null) {
-      result += ' en ' + Course!.service!.name!;
-    }
-    
-    if (date?.valeur != null) {
-      result += ' le ' + date!.valeur!;
+    if (date?.value != null) {
+      result += ' le ' + date!.value!;
     }
     
     return result;
@@ -155,11 +177,11 @@ class Exam extends JsonObject {
 class ValueObject extends JsonObject {
   ValueObject({
     this.id,
-    this.valeur,
+    this.value,
   });
 
   final int? id;
-  final String? valeur;
+  final String? value;
 
   factory ValueObject.fromRawJson(String str) => ValueObject.fromJson(json.decode(str));
 
@@ -168,13 +190,13 @@ class ValueObject extends JsonObject {
 
   factory ValueObject.fromJson(Map<String, dynamic> json) => ValueObject(
     id: json["_T"],
-    valeur: json["V"],
+    value: json["V"],
   );
 
   @override
   Map<String, dynamic> toJson() => {
     "_T": id,
-    "V": valeur,
+    "V": value,
   };
 }
 

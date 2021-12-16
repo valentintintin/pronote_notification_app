@@ -1,11 +1,10 @@
 
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:pronote_notification/pronote/models/response/home_page.dart';
 import 'package:pronote_notification/pronote/session_pronote.dart';
 import 'package:pronote_notification/service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget({Key? key}) : super(key: key);
@@ -40,193 +39,167 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   String? password;
   String? casUrl;
   String? pronoteUrl;
-  double interval = 15;
+  int interval = 15;
   bool check = true;
 
-  bool isConnected = false;
-  String? userFullName;
-  String? schoolName;
-  String? lastMarks;
 
-  Future<bool> getSharedPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-
+  @override
+  void initState() {
     username = prefs.getString('username');
     password = prefs.getString('password');
     casUrl = prefs.getString('casUrl') ?? casUrls.first.value;
     pronoteUrl = prefs.getString('pronoteUrl') ?? pronoteUrls.first.value;
-    interval = prefs.getDouble('interval') ?? interval;
-
-    if (firstLoadSharedPreferencies) {
-      check = prefs.getBool('check') ?? true;
-    }
-
-    firstLoadSharedPreferencies = false;
-
-    return true;
+    interval = prefs.getInt('interval') ?? interval;
+    check = prefs.getBool('check') ?? true;
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
         elevation: 10,
-        child: FutureBuilder<bool>(
-            future: getSharedPreferences(),
-            builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-              if (snapshot.hasData) {
-                return
-                  Padding(
-                      padding: EdgeInsets.all(10),
+        child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Text('Vos informations', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+                  ),
+                  Form(
+                      key: _formKey,
                       child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.all(10),
-                              child: Text('Vos informations', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: TextFormField(
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  icon: Icon(Icons.person),
+                                  labelText: 'Identifiant *',
+                                ),
+                                keyboardType: TextInputType.emailAddress,
+                                initialValue: username,
+                                onSaved: (value) => username = value?.toLowerCase(),
+                                validator: (value) =>
+                                value == null || value.isEmpty
+                                    ? 'Votre identifiant est requis'
+                                    : null
                             ),
-                            Form(
-                                key: _formKey,
-                                child: Column(
+                          ),
+                          Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: TextFormField(
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    icon: Icon(Icons.security),
+                                    labelText: 'Mot de passe *',
+                                  ),
+                                  keyboardType: TextInputType.visiblePassword,
+                                  obscureText: true,
+                                  initialValue: password,
+                                  onSaved: (value) => password = value,
+                                  validator: (value) =>
+                                  value == null || value.isEmpty
+                                      ? 'Votre mot de passe est requis'
+                                      : null
+                              )
+                          ),
+                          Padding(
+                              padding: const EdgeInsets.all(10),
+                              child:
+                              DropdownButtonFormField(
+                                  isExpanded: true,
+                                  iconSize: 24,
+                                  elevation: 16,
+                                  icon: const Icon(Icons.arrow_downward),
+                                  onChanged: (newValue) {},
+                                  onSaved: (value) => pronoteUrl = value.toString(),
+                                  value: pronoteUrl,
+                                  items: pronoteUrls,
+                                  validator: (value) =>
+                                  value == null || value == ''
+                                      ? 'Votre établissement est requis'
+                                      : null
+                              )
+                          ),
+                          Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(10),
-                                      child: TextFormField(
-                                          decoration: const InputDecoration(
-                                            border: OutlineInputBorder(),
-                                            icon: Icon(Icons.person),
-                                            labelText: 'Identifiant *',
-                                          ),
-                                          keyboardType: TextInputType.emailAddress,
-                                          initialValue: username,
-                                          onSaved: (value) => username = value?.toLowerCase(),
-                                          validator: (value) =>
-                                          value == null || value.isEmpty
-                                              ? 'Votre identifiant est requis'
-                                              : null
-                                      ),
-                                    ),
-                                    Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: TextFormField(
-                                            decoration: const InputDecoration(
-                                              border: OutlineInputBorder(),
-                                              icon: Icon(Icons.security),
-                                              labelText: 'Mot de passe *',
-                                            ),
-                                            keyboardType: TextInputType.visiblePassword,
-                                            obscureText: true,
-                                            initialValue: password,
-                                            onSaved: (value) => password = value,
-                                            validator: (value) =>
-                                            value == null || value.isEmpty
-                                                ? 'Votre mot de passe est requis'
-                                                : null
+                                    Text('Intervalle de vérification\n' + interval.toString() + ' minutes'),
+                                    Expanded(
+                                        child: Slider(
+                                          value: interval.roundToDouble(),
+                                          min: kDebugMode ? 1 : 15,
+                                          max: 4 * 60,
+                                          divisions: 15,
+                                          label: interval.round().toString() + ' minutes',
+                                          onChanged: (double value) {
+                                            setState(() {
+                                              interval = value.round();
+                                            });
+                                          },
                                         )
-                                    ),
-                                    Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child:
-                                        DropdownButtonFormField(
-                                            isExpanded: true,
-                                            iconSize: 24,
-                                            elevation: 16,
-                                            icon: const Icon(Icons.arrow_downward),
-                                            onChanged: (newValue) {},
-                                            onSaved: (value) => pronoteUrl = value.toString(),
-                                            value: pronoteUrl,
-                                            items: pronoteUrls,
-                                            validator: (value) =>
-                                            value == null || value == ''
-                                                ? 'Votre établissement est requis'
-                                                : null
-                                        )
-                                    ),
-                                    Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              const Text('Activer la vérification des nouvelles notes'),
-                                              Checkbox(
-                                                value: check,
-                                                onChanged: (bool? value) {
-                                                  setState(() {
-                                                    check = value!;
-                                                  });
-                                                },
-                                              )
-                                            ]
-                                        )
-                                    ),
-                                    Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Text('Intervalle de vérification\n' + interval.round().toString() + ' minutes'),
-                                              Expanded(
-                                                  child: Slider(
-                                                    value: interval,
-                                                    min: 15,
-                                                    max: 4 * 60,
-                                                    divisions: 15,
-                                                    label: interval.round().toString() + ' minutes',
-                                                    onChanged: (double value) {
-                                                      setState(() {
-                                                        interval = value;
-                                                      });
-                                                    },
-                                                  )
-                                              )
-                                            ]
-                                        )
-                                    ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        loadingInProgress ? const Text('Connexion en cours ...') : Padding(
-                                            padding: const EdgeInsets.all(10),
-                                            child: ElevatedButton(
-                                              onPressed: () async {
-                                                _authPronote(false);
-                                              },
-                                              child: const Text('Enregistrer'),
-                                            )
-                                        ),
-                                        kDebugMode ? loadingInProgress ? const Text('Connexion en cours ...') : Padding(
-                                            padding: const EdgeInsets.all(10),
-                                            child: ElevatedButton(
-                                              onPressed: () async {
-                                                _authPronote(true);
-                                              },
-                                              child: const Text('Tester'),
-                                            )
-                                        ) : Container(),
-                                        kDebugMode ? Padding(
-                                            padding: const EdgeInsets.all(10),
-                                            child: ElevatedButton(
-                                              onPressed: () async {
-                                                final prefs = await SharedPreferences.getInstance();
-                                                await prefs.clear();
-                                              },
-                                              child: const Text('Reset'),
-                                            )
-                                        ) : Container(),
-                                      ],
                                     )
-                                  ],
-                                )
-                            ),
-                            isConnected ? Text('Utilisateur : ' + (userFullName ?? '-'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),) : Container(),
-                            isConnected ? Text('Établissement : ' + (schoolName ?? '-'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),) : Container(),
-                            isConnected ? Text('Dernière note : ' + (lastMarks ?? '-'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),) : Container(),
-                          ]
+                                  ]
+                              )
+                          ),
+                          Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text('Activer la vérification des nouvelles notes'),
+                                    Checkbox(
+                                      value: check,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          check = value!;
+                                        });
+                                      },
+                                    )
+                                  ]
+                              )
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              loadingInProgress ? const Text('Connexion en cours ...') : Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      _authPronote(false);
+                                    },
+                                    child: const Text('Enregistrer'),
+                                  )
+                              ),
+                              kDebugMode ? loadingInProgress ? const Text('Connexion en cours ...') : Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      _authPronote(true);
+                                    },
+                                    child: const Text('Tester'),
+                                  )
+                              ) : Container(),
+                              kDebugMode ? Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      await prefs.remove('lastMarksId');
+                                    },
+                                    child: const Text('Reset'),
+                                  )
+                              ) : Container(),
+                            ],
+                          )
+                        ],
                       )
-                  );
-              }
-
-              return const Center(child: CircularProgressIndicator());
-            }
+                  )
+                ]
+            )
         )
     );
   }
@@ -235,28 +208,22 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      setState(() {
-        isConnected = false;
-
-        userFullName = null;
-        schoolName = null;
-        lastMarks = null;
-      });
-
-      final prefs = await SharedPreferences.getInstance();
       prefs.setString('username', username!);
       prefs.setString('password', password!);
       prefs.setString('casUrl', casUrl!);
       prefs.setString('pronoteUrl', pronoteUrl!);
+      prefs.setInt('interval', interval);
       prefs.setBool('fake', fake);
       prefs.setBool('check', check);
-      prefs.remove('lastMarksId');
+
+      int checkNoteAlarmId = 0;
+      await AndroidAlarmManager.cancel(checkNoteAlarmId);
 
       if (!check) {
         print('Pas de vérification');
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('C\'est enregistré !')),
+          const SnackBar(content: Text('C\'est enregistré, pas de vérification')),
         );
 
         return;
@@ -266,27 +233,26 @@ class _SettingsWidgetState extends State<SettingsWidget> {
         loadingInProgress = true;
       });
 
-      SessionPronote sessionPronote = SessionPronote(
-          casUrl!, pronoteUrl!, useFake: fake);
       try {
-        await sessionPronote.auth(username!, password!);
+        SessionPronote session = await authPronote();
 
-        userFullName = sessionPronote.getUserFullName();
-        schoolName = sessionPronote.getSchoolName();
+        String? lastMarksId = (await session.getLastsMark()).toString();
 
-        Exam? lastMark = sessionPronote.getLastMark();
+        prefs.setString('lastMarksId', lastMarksId);
 
-        if (lastMark != null && lastMark.mark?.valeur != null) {
-          lastMarks = lastMark.toString();
+        if (!await AndroidAlarmManager.periodic(
+            Duration(minutes: interval),
+            checkNoteAlarmId,
+            checkNewMark,
+            rescheduleOnReboot: true,
+            allowWhileIdle: true,
+        )) {
+          showOkDialog(context, "Erreur", 'Connexion réussie mais impossible de lancer la vérification en arrière-plan');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Connexion réussie et vérification activée')),
+          );
         }
-
-        setState(() {
-          isConnected = true;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Connexion réussie !')),
-        );
       } catch (e) {
         showOkDialog(context, "Erreur", e.toString());
       }

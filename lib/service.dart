@@ -8,13 +8,23 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:pronote_notification/pronote/models/response/home_page.dart';
 import 'package:pronote_notification/pronote/session_pronote.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-StreamController<SessionPronote> controller = StreamController<SessionPronote>();
-Stream stremPronoteSession = controller.stream;
+StreamController<SessionPronote?> streamPronoteSessionController = StreamController<SessionPronote?>();
+Stream<SessionPronote?> streamPronoteSession = streamPronoteSessionController.stream.asBroadcastStream();
+SessionPronote? lastSessionPronote;
+
+late SharedPreferences prefs;
 
 Future<SessionPronote> authPronote() async {
-  final prefs = await SharedPreferences.getInstance();
+  var connectivityResult = await (Connectivity().checkConnectivity());
+
+  if (connectivityResult == ConnectivityResult.none) {
+    throw Exception('Aucun réseau');
+  }
+  
+  prefs = await SharedPreferences.getInstance();
 
   String? username = prefs.getString('username');
   String? password = prefs.getString('password');
@@ -22,24 +32,25 @@ Future<SessionPronote> authPronote() async {
   String? pronoteUrl = prefs.getString('pronoteUrl');
   bool fake = prefs.getBool('fake') ?? false;
 
-  if (kDebugMode) {
-    sendNotificationDebug('Coucou !');
-  }
-
   if (username == null || password == null || casUrl == null || pronoteUrl == null) {
     throw Exception('Il manque des informations pour pouvoir se connecter !');
   }
 
-  SessionPronote sessionPronote = SessionPronote(casUrl, pronoteUrl, useFake: fake);
-  await sessionPronote.auth(username, password);
+  lastSessionPronote = SessionPronote(casUrl, pronoteUrl, useFake: fake);
+  await lastSessionPronote!.auth(username, password);
 
-  controller.add(sessionPronote);
+  streamPronoteSessionController.add(lastSessionPronote);
   
-  return sessionPronote;
+  return lastSessionPronote!;
 }
 
-Future<Exam?> checkNewNote({ forceShow = false }) async {
-  final prefs = await SharedPreferences.getInstance();
+Future<String?> checkNewMark({ forceShow = false }) async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  prefs = await SharedPreferences.getInstance();
+  
+  print('Vérification des notes');
+  
   bool check = prefs.getBool('check') ?? false;
 
   if (!check && !forceShow) {
@@ -47,38 +58,63 @@ Future<Exam?> checkNewNote({ forceShow = false }) async {
     return null;
   }
 
-  SessionPronote sessionPronote = await authPronote();
+  var connectivityResult = await (Connectivity().checkConnectivity());
 
-  Exam? lastMark = sessionPronote.getLastMark();
-  if (lastMark != null) {
-    String lastMarkId = lastMark.toString();
+  if (connectivityResult == ConnectivityResult.none) {
+    throw Exception('Aucun réseau');
+  }
 
-    String? lastMarksId = prefs.getString('lastMarksId');
+  bool shouldRefresh = lastSessionPronote != null;
 
-    if (lastMarksId != lastMarkId || forceShow){
-      if (!Platform.isLinux) {
-        sendNotification(lastMark, isCheck: forceShow);
+  if (kDebugMode) {
+    sendNotificationDebug(shouldRefresh.toString());
+  }
+  
+  SessionPronote sessionPronote = lastSessionPronote ?? await authPronote();
+
+  ExamsList? lastMarks = await sessionPronote.getLastsMark(refresh: shouldRefresh);
+  
+  streamPronoteSessionController.add(lastSessionPronote);
+  
+  if (lastMarks != null) {
+    String? lastMarksIdSaved = prefs.getString('lastMarksId');
+    
+    String lastMarksId = lastMarks.toString();
+    
+    for (var mark in lastMarks.exams!.reversed.toList()) { // on reverse pour que la dernière notification soit en premier
+      String markId = mark.toString();
+      
+      if (lastMarksIdSaved == null || !lastMarksIdSaved.contains(markId)) {
+        print('Nouvelle note ' + markId);
+
+        if (!Platform.isLinux) {
+          sendNotification(markId, isCheck: forceShow);
+        }
       }
-
-      prefs.setString('lastMarksId', lastMarkId);
     }
 
-    return lastMark;
+    prefs.setString('lastMarksId', lastMarksId);
+
+    return lastMarksId;
   }
+  
+  print('Pas de note');
 
   return null;
 }
 
-Future<void> sendNotification(Exam devoir, { isCheck = false }) async {
+Future<void> sendNotification(String marks, { isCheck = false }) async {
   if (!Platform.isLinux) {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    AndroidNotificationDetails androidPlatformChannelSpecifics = const AndroidNotificationDetails(
       'new_note', 'Nouvelle note',
       channelDescription: 'Lorsqu\'une nouvelle note arrive',
       importance: Importance.max,
       priority: Priority.max,
+      enableLights: true,
+      setAsGroupSummary: true
     );
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(Random().nextInt(9999), isCheck ? 'Dernière note' : 'Nouvelle note !', devoir.toString(), platformChannelSpecifics, payload: null);
+    NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(Random().nextInt(pow(2, 31).round()), isCheck ? 'Dernière note' : 'Nouvelle note !', marks, platformChannelSpecifics, payload: null);
   }
 }
 
@@ -89,7 +125,7 @@ Future<void> sendNotificationDebug(String content) async {
       channelDescription: 'Pour débugger',
     );
     const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(0, 'Debug', content, platformChannelSpecifics, payload: null);
+    await flutterLocalNotificationsPlugin.show(0, 'Debug', 'Débug : ' + content, platformChannelSpecifics, payload: null);
   }
 }
 

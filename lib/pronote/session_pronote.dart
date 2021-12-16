@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/rendering.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hex/hex.dart';
 import 'dart:math';
 import 'dart:typed_data';
@@ -21,15 +21,13 @@ import 'package:pronote_notification/pronote/models/response/info.dart';
 import 'package:pronote_notification/pronote/models/response/home_page.dart';
 import 'package:pronote_notification/pronote/models/response/params_user.dart';
 import 'package:pronote_notification/pronote/session_http.dart';
+import 'package:pronote_notification/pronote/session_http_fake.dart';
 
 class SessionPronote {
   SessionPronote(this._casUrl, this._pronoteUrl, { useFake = false}) {
-    _sessionHttp = SessionHttp(useFake: useFake);
+    _sessionHttp = useFake ? SessionHttpFake() : SessionHttp();
     
     if (useFake) {
-      // iv = )¢6}§úûøü=Ù}
-      // cleAes = ÕÕªòkKn-³ÇæÃ)H
-
       _iv = Uint8List.fromList(HEX.decode('1a1029a2367da718fafbf8fc3dd9807d'));
     } else {
       Random randomGenerator = Random.secure();
@@ -103,18 +101,18 @@ class SessionPronote {
     return user.school?.nameValue?.name; 
   }
 
-  Exam? getLastMark() {
+  Future<ExamsList?> getLastsMark({ refresh = false }) async {
     _checkIsAuthenticated();
     
-    Exam? lastMark = homePage.exams?.examsList?.exams?.last;
-    if (lastMark != null && lastMark.mark?.valeur != null) {
-      print('Dernière note : ' + lastMark.toString());
-
-      return lastMark;
+    if (refresh) {
+      homePage = await _getHomePage();
+    }
+    
+    ExamsList? lastMarks = homePage.exams?.examsList;
+    if (lastMarks != null && lastMarks.exams?.isNotEmpty == true) {
+      return lastMarks;
     }
 
-    print('Aucune note');
-    
     return null;
   }
   
@@ -151,7 +149,7 @@ class SessionPronote {
   }
 
   Future<CipherAccount> _getCipherFromPronote() async {
-    Response response = await _sessionHttp.get(_pronoteUrl + 'eleve.html'); // TODO URI builder
+    Response response = await _sessionHttp.get(_pronoteUrl + 'eleve.html?fd=1'); // TODO URI builder
 
     if (response.statusCode >= 400) {
       throw Exception('Impossible de récupérer les clés sur Pronote');
@@ -360,7 +358,7 @@ class SessionPronote {
       result[i] = int.parse(split[i]);
     }
     
-    debugPrint('Clé : ' + data + ' soit ' + _listToString(result));
+    //debugPrint('Clé : ' + data + ' soit ' + _listToString(result));
     
     return result;
   }

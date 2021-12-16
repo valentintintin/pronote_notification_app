@@ -1,20 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:pronote_notification/service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class LastMarkWidget extends StatefulWidget {
-  const LastMarkWidget({Key? key}) : super(key: key);
+class LastMarksWidget extends StatefulWidget {
+  const LastMarksWidget({Key? key}) : super(key: key);
 
   @override
-  State<LastMarkWidget> createState() => _LastMarkWidgetState();
+  State<LastMarksWidget> createState() => _LastMarksWidgetState();
 }
 
-class _LastMarkWidgetState extends State<LastMarkWidget> {
+class _LastMarksWidgetState extends State<LastMarksWidget> {
   bool checkInProgress = false;
 
-  Future<String?> getLastMarksSaved() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('lastMarksId');
+  StreamSubscription? streamSubscription;
+
+  String? lastMark;
+
+  @override
+  void initState() {
+    streamSubscription = streamPronoteSession.listen((session) async {
+      lastMark = (await session?.getLastsMark()).toString();
+      setState(() {});
+    });
+
+    lastMark = prefs.getString('lastMarksId');
+  }
+
+  @override
+  void dispose() {
+    streamSubscription?.cancel();
   }
   
   @override
@@ -24,22 +39,17 @@ class _LastMarkWidgetState extends State<LastMarkWidget> {
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Padding(
                 padding: EdgeInsets.all(10),
-                child: Text('Dernière note enregistrée', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+                child: Text('Dernière notes enregistrées', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 10),
-                child: FutureBuilder<String?>(
-                    future: getLastMarksSaved(),
-                    builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
-                      return Text(snapshot.data ?? 'Aucune', textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500));
-                    }
-                ),
+                  child: Text(lastMark ?? 'Aucune', textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))
               ),
               Center(
+                widthFactor: 1,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 10, bottom: 10),
                   child: checkInProgress ? const Text('Vérification en cours ...') : OutlinedButton(
@@ -49,7 +59,7 @@ class _LastMarkWidgetState extends State<LastMarkWidget> {
                         });
 
                         try {
-                          await checkNewNote(forceShow: true);
+                          await checkNewMark(forceShow: true);
                         } catch (e) {
                           showOkDialog(context, "Erreur", e.toString());
                         }
