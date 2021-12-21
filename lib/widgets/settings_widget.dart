@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +43,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   String? pronoteUrl;
   int interval = 15;
   bool check = true;
-
 
   @override
   void initState() {
@@ -189,6 +190,12 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                   child: ElevatedButton(
                                     onPressed: () async {
                                       await prefs.remove('lastMarksId');
+                                      await prefs.remove('lastCanceledClassesId');
+                                      await prefs.remove('lastCheckDate');
+                                      
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Ok')),
+                                      );
                                     },
                                     child: const Text('Reset'),
                                   )
@@ -215,10 +222,13 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       prefs.setInt('interval', interval);
       prefs.setBool('fake', fake);
       prefs.setBool('check', check);
-
+      
       int checkNoteAlarmId = 0;
-      await AndroidAlarmManager.cancel(checkNoteAlarmId);
-
+      
+      if (!Platform.isLinux) {
+        await AndroidAlarmManager.cancel(checkNoteAlarmId);
+      }
+      
       if (!check) {
         print('Pas de vérification');
 
@@ -234,26 +244,25 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       });
 
       try {
-        SessionPronote session = await authPronote();
+        await checkNewMark(notify: false, forceAuth: true);
+        await checkNewCanceledClasses(notify: false, forceAuth: false);
 
-        String? lastMarksId = (await session.getLastsMark()).toString();
-
-        prefs.setString('lastMarksId', lastMarksId);
-
-        if (!await AndroidAlarmManager.periodic(
-            Duration(minutes: interval),
-            checkNoteAlarmId,
-            checkNewMark,
-            rescheduleOnReboot: true,
-            allowWhileIdle: true,
+        if (!Platform.isLinux && !await AndroidAlarmManager.periodic(
+          Duration(minutes: interval),
+          checkNoteAlarmId,
+          runAlarm,
+          rescheduleOnReboot: true,
+          allowWhileIdle: true,
         )) {
-          showOkDialog(context, "Erreur", 'Connexion réussie mais impossible de lancer la vérification en arrière-plan');
+          showOkDialog(context, "Erreur",
+              'Connexion réussie mais impossible de lancer la vérification en arrière-plan');
         } else {
+          print('Connexion OK');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Connexion réussie et vérification activée')),
           );
         }
-      } catch (e) {
+      } catch(e) {
         showOkDialog(context, "Erreur", e.toString());
       }
 

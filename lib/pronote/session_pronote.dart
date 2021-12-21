@@ -15,6 +15,7 @@ import 'package:pronote_notification/pronote/models/requests/authentification.da
 import 'package:pronote_notification/pronote/models/requests/identification.dart';
 import 'package:pronote_notification/pronote/models/requests/navigation.dart';
 import 'package:pronote_notification/pronote/models/requests/params.dart';
+import 'package:pronote_notification/pronote/models/response/agenda_page.dart';
 import 'package:pronote_notification/pronote/models/response/challenge.dart';
 import 'package:pronote_notification/pronote/models/response/connexion.dart';
 import 'package:pronote_notification/pronote/models/response/info.dart';
@@ -41,7 +42,6 @@ class SessionPronote {
   // public
   late DonneesInfo params;
   late ParamsUserRessource user;
-  late HomePage homePage;
   
   // private
   late final SessionHttp _sessionHttp;
@@ -84,8 +84,6 @@ class SessionPronote {
 
     await _navigate(7);
     
-    homePage = await _getHomePage();
-    
     isAuthenticated = true;
   }
   
@@ -101,16 +99,26 @@ class SessionPronote {
     return user.school?.nameValue?.name; 
   }
 
-  Future<ExamsList?> getLastsMark({ refresh = false }) async {
+  Future<ExamsList?> getLastsMark() async {
     _checkIsAuthenticated();
     
-    if (refresh) {
-      homePage = await _getHomePage();
-    }
-    
-    ExamsList? lastMarks = homePage.exams?.examsList;
+    ExamsList? lastMarks = (await _getHomePage()).exams?.examsList;
     if (lastMarks != null && lastMarks.exams?.isNotEmpty == true) {
       return lastMarks;
+    }
+
+    return null;
+  }
+
+  Future<List<Class>?> getLastCanceledClasses() async {
+    _checkIsAuthenticated();
+    
+    List<Class>? lastCanceledClasses = (await _getAgendaPage()).classes
+        ?.where((classe) => classe.isCanceled == true)
+        .toList();
+    if (lastCanceledClasses != null && lastCanceledClasses.isNotEmpty == true) {
+      lastCanceledClasses.sort((a, b) => b.date!.value!.compareTo(a.date!.value!));
+      return lastCanceledClasses;
     }
 
     return null;
@@ -257,6 +265,16 @@ class SessionPronote {
     ));
 
     return RequestData<HomePage>.fromRawJson(response, (json) => HomePage.fromJson(json)).donneesSec!.donnees!;
+  }
+
+  Future<DonneesAgenda> _getAgendaPage() async {
+    String response = await request('PageEmploiDuTemps', RequestDonneesSec(
+        signature: RequestDonneesSignature(
+          onglet: _currentPage
+        ) 
+    ));
+
+    return RequestData<DonneesAgenda>.fromRawJson(response, (json) => DonneesAgenda.fromJson(json)).donneesSec!.donnees!;
   }
 
   Future<String> request(String name, RequestDonneesSec? content) async {

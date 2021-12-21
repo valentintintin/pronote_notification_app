@@ -180,8 +180,8 @@ class ValueObject extends JsonObject {
     this.value,
   });
 
-  final int? id;
-  final String? value;
+  final int? id; // _T
+  final String? value; // V
 
   factory ValueObject.fromRawJson(String str) => ValueObject.fromJson(json.decode(str));
 

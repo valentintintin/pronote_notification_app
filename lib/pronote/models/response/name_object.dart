@@ -8,8 +8,8 @@ class NameObject extends JsonObject {
     this.id,
   });
 
-  final String? name;
-  final String? id;
+  final String? name; // L
+  final String? id; // N
 
   factory NameObject.fromRawJson(String str) => NameObject.fromJson(json.decode(str));
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:pronote_notification/pronote/models/response/home_page.dart';
 import 'package:pronote_notification/service.dart';
 
 class AccountInfoWidget extends StatefulWidget {
@@ -18,7 +19,7 @@ class _AccountInfoWidgetState extends State<AccountInfoWidget> {
   
   @override
   void initState() {
-    streamSubscription = streamPronoteSession.listen((session) {
+    streamSubscription = streamPronoteSession.listen((session) async {
       setState(() {
         userFullName = session?.getUserFullName();
         schoolName = session?.getSchoolName();
@@ -47,7 +48,7 @@ class _AccountInfoWidgetState extends State<AccountInfoWidget> {
                 padding: const EdgeInsets.only(top: 10, bottom: 10),
                 child: Column(
                   children: [
-                    Text('Utilisateur : ' + (userFullName ?? 'inconnu'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),),
+                    Text('Élève : ' + (userFullName ?? 'inconnu'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),),
                     Text('Établissement : ' + (schoolName ?? 'inconnu'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),),
                   ],
                 )

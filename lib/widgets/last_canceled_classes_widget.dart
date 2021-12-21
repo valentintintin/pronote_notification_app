@@ -3,31 +3,31 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pronote_notification/service.dart';
 
-class LastMarksWidget extends StatefulWidget {
-  const LastMarksWidget({Key? key}) : super(key: key);
+class LastCanceledClassesWidget extends StatefulWidget {
+  const LastCanceledClassesWidget({Key? key}) : super(key: key);
 
   @override
-  State<LastMarksWidget> createState() => _LastMarksWidgetState();
+  State<LastCanceledClassesWidget> createState() => _LastCanceledClassesWidgetState();
 }
 
-class _LastMarksWidgetState extends State<LastMarksWidget> {
+class _LastCanceledClassesWidgetState extends State<LastCanceledClassesWidget> {
   bool checkInProgress = false;
 
   StreamSubscription? streamSubscription;
 
-  String? lastMarks;
+  String? lastCanceledClasses;
   String? lastCheckDate;
 
   @override
   void initState() {
     streamSubscription = streamPronoteSession.listen((session) async {
-      lastMarks = prefs.getString('lastMarksId');
+      lastCanceledClasses = prefs.getString('lastCanceledClassesId');
       lastCheckDate = prefs.getString('lastCheckDate');
 
       setState(() {});
     });
 
-    lastMarks = prefs.getString('lastMarksId');
+    lastCanceledClasses = prefs.getString('lastCanceledClassesId');
     lastCheckDate = prefs.getString('lastCheckDate');
   }
 
@@ -46,11 +46,11 @@ class _LastMarksWidgetState extends State<LastMarksWidget> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(10),
-                child: Text('Dernière notes enregistrées' + (lastCheckDate != null ? '\n' + lastCheckDate! : ''), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+                child: Text('Derniers cours annulés enregistrés' + (lastCheckDate != null ? '\n' + lastCheckDate! : ''), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 10),
-                  child: Text(lastMarks ?? 'Aucune', textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))
+                  child: Text(lastCanceledClasses ?? 'Aucun', textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))
               ),
               Center(
                 widthFactor: 1,
@@ -71,7 +71,7 @@ class _LastMarksWidgetState extends State<LastMarksWidget> {
                         setState(() {
                           checkInProgress = false;
                         });
-                      }, child: const Text('Vérifier les notes maintenant')),
+                      }, child: const Text('Vérifier les cours annulées maintenant')),
                 ),
               ),
             ]

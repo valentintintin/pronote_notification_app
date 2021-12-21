@@ -10,7 +10,7 @@ class HelpWidget extends StatelessWidget {
           Text('Application qui vous notifie lorsqu\'il y a une nouvelle note sur Pronote', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
           Padding(
             padding: EdgeInsets.only(top: 10, bottom: 10),
-            child: Text('La vérification se fait toutes les 15 minutes.\nVos identifiants ne sont envoyés à personne, tout est fait sur votre téléphone :)'),
+            child: Text('Vos identifiants ne sont envoyés à personne, tout est fait sur votre téléphone :)'),
           )
         ]
     );

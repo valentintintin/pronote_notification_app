@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pronote_notification/widgets/account_info_widget.dart';
 import 'package:pronote_notification/widgets/app_info_widget.dart';
 import 'package:pronote_notification/widgets/help_widget.dart';
+import 'package:pronote_notification/widgets/last_canceled_classes_widget.dart';
 import 'package:pronote_notification/widgets/last_marks_widget.dart';
 import 'package:pronote_notification/widgets/settings_widget.dart';
 
@@ -32,6 +33,7 @@ class _PageWidgetState extends State<PageWidget> {
                       alignment: WrapAlignment.center,
                       children: const [
                         LastMarksWidget(),
+                        LastCanceledClassesWidget(),
                         AccountInfoWidget(),
                       ]
                   ),
