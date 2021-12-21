@@ -63,7 +63,7 @@ class _LastCanceledClassesWidgetState extends State<LastCanceledClassesWidget> {
                         });
 
                         try {
-                          await checkNewMark(force: true);
+                          await checkNewCanceledClasses(force: true);
                         } catch (e) {
                           showOkDialog(context, "Erreur", e.toString());
                         }

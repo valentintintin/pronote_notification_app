@@ -82,7 +82,8 @@ class SessionPronote {
 
     user = await _getParamsUser();
 
-    await _navigate(7);
+    // J'ai l'impression que ce n'est pas très utile car fonctionne sans
+    // await _navigate(7);
     
     isAuthenticated = true;
   }
