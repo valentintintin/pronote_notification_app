@@ -4,15 +4,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pronote_notification/pronote/session_pronote.dart';
 import 'package:pronote_notification/service.dart';
-import 'package:webview_cookie_manager/webview_cookie_manager.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebViewPronotePageWidget extends StatelessWidget {
   WebViewPronotePageWidget({Key? key}) : super(key: key);
 
-  final cookieManager = WebviewCookieManager();
   final Completer<WebViewController> _controller = Completer<WebViewController>();
 
   Widget build(BuildContext context) {    
