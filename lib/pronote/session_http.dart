@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
 class SessionHttp {
@@ -22,7 +23,7 @@ class SessionHttp {
     //debugPrint('Response ' + response.request.toString() + ' ' + response.statusCode.toString() + ' ' + (response.body.length > 1000 ? response.body.substring(0, 1000) : response.body));
     
     String? rawCookie = response.headers['set-cookie'];
-    if (rawCookie != null) {
+    if (rawCookie != null && rawCookie.contains('TGC')) {
       int index = rawCookie.indexOf(';'); 
       
       String cookie = (index == -1) ? rawCookie : rawCookie.substring(0, index);
@@ -40,6 +41,10 @@ class SessionHttp {
   }
   
   bool hasCookie() {
-    return headers.containsKey('cookie');
+    return headers.containsKey('cookie') && headers['cookie'] != null;
+  }
+  
+  String? getCookie() {
+    return hasCookie() ? headers['cookie'] : null;
   }
 }

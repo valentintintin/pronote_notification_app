@@ -125,13 +125,21 @@ class SessionPronote {
     return null;
   }
   
+  void _checkIsAuthenticatedCas() {
+    if (!_sessionHttp.hasCookie()) {
+      throw Exception("Vous n\'etes pas connecté à l'académie !");
+    }
+  }
+  
   void _checkIsAuthenticated() {
+    _checkIsAuthenticatedCas();
+    
     if (!isAuthenticated) {
       throw Exception("Vous n\'etes pas connecté !");
     }
   }
-
-  Future<void> _authCas(String username, String password) async {
+  
+  Future<Map<String?, String?>> getAuthCasRequest(String username, String password) async {
     Response response = await _sessionHttp.get(_casUrl);
 
     if (response.statusCode >= 400) {
@@ -150,11 +158,27 @@ class SessionPronote {
 
     map.removeWhere((key, value) => value == null);
 
-    response = await _sessionHttp.post(url, map);
+    // Astuce pour éviter de renvoyer un Tuple ou un Objet
+    map['urlPost'] = url + '&service=' + Uri.encodeQueryComponent(_pronoteUrl);
+    map['urlPronote'] = _pronoteUrl;
+    
+    return map;
+  }
+
+  Future<String> _authCas(String username, String password) async {
+    if (_sessionHttp.hasCookie()) {
+      return _sessionHttp.getCookie()!;
+    }
+
+    Map<String?, String?> map = await getAuthCasRequest(username, password);
+
+    Response response = await _sessionHttp.post(map['urlPost']!, map);
 
     if (response.statusCode >= 400) {
       throw Exception('Impossible de se connecter avec vos identifiants l\'académie');
     }
+
+    return _sessionHttp.getCookie()!;    
   }
 
   Future<CipherAccount> _getCipherFromPronote() async {

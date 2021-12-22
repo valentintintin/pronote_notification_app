@@ -5,8 +5,8 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:pronote_notification/pronote/session_pronote.dart';
 import 'package:pronote_notification/service.dart';
+import 'package:pronote_notification/widgets/webview_pronote_page_widget.dart';
 
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget({Key? key}) : super(key: key);
@@ -164,8 +164,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                   ]
                               )
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Wrap(
+                            alignment: WrapAlignment.center,
                             children: [
                               loadingInProgress ? const Text('Connexion en cours ...') : Padding(
                                   padding: const EdgeInsets.all(10),
@@ -176,13 +176,23 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                     child: const Text('Enregistrer'),
                                   )
                               ),
+                              loadingInProgress ? const SizedBox() : Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: TextButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => WebViewPronotePageWidget()),
+                                        );
+                                      }, child: const Text('Ouvrir Pronote'))
+                              ),
                               kDebugMode ? loadingInProgress ? const Text('Connexion en cours ...') : Padding(
                                   padding: const EdgeInsets.all(10),
                                   child: ElevatedButton(
                                     onPressed: () async {
                                       _authPronote(true);
                                     },
-                                    child: const Text('Tester'),
+                                    child: const Text('Tester (fake)'),
                                   )
                               ) : Container(),
                               kDebugMode ? Padding(
@@ -192,7 +202,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                       await prefs.remove('lastMarksId');
                                       await prefs.remove('lastCanceledClassesId');
                                       await prefs.remove('lastCheckDate');
-                                      
+
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(content: Text('Ok')),
                                       );
@@ -222,13 +232,13 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       prefs.setInt('interval', interval);
       prefs.setBool('fake', fake);
       prefs.setBool('check', check);
-      
+
       int checkNoteAlarmId = 0;
-      
+
       if (!Platform.isLinux) {
         await AndroidAlarmManager.cancel(checkNoteAlarmId);
       }
-      
+
       if (!check) {
         print('Pas de vérification');
 

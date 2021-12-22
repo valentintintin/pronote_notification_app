@@ -30,13 +30,32 @@ Future<bool> checkNetwork() async {
   return true;
 }
 
-Future<SessionPronote> authPronote({ forceAuth = false }) async {
+Future<Map<String?, String?>> getAuthCasRequest() async {
   checkNetwork();
   
+  prefs = await SharedPreferences.getInstance();
+
+  String? username = prefs.getString('username');
+  String? password = prefs.getString('password');
+  String? casUrl = prefs.getString('casUrl');
+  String? pronoteUrl = prefs.getString('pronoteUrl');
+  bool fake = prefs.getBool('fake') ?? false;
+
+  if (username == null || password == null || casUrl == null || pronoteUrl == null) {
+    throw Exception('Il manque des informations pour pouvoir se connecter !');
+  }
+
+  SessionPronote sessionPronote = SessionPronote(casUrl, pronoteUrl, useFake: fake);
+  return sessionPronote.getAuthCasRequest(username, password);
+}
+
+Future<SessionPronote> authPronote({ forceAuth = false }) async {
+  checkNetwork();
+
   if (!forceAuth && lastSessionPronote != null) {
     return lastSessionPronote!;
   }
-  
+
   prefs = await SharedPreferences.getInstance();
 
   String? username = prefs.getString('username');
