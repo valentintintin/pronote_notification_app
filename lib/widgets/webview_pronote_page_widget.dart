@@ -9,9 +9,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 class WebViewPronotePageWidget extends StatelessWidget {
   WebViewPronotePageWidget({Key? key}) : super(key: key);
-
-  final Completer<WebViewController> _controller = Completer<WebViewController>();
-
+  
   Widget build(BuildContext context) {    
     return Scaffold(
         appBar: AppBar(
@@ -38,23 +36,28 @@ class WebViewPronotePageWidget extends StatelessWidget {
                   parts.add('${Uri.encodeQueryComponent(key!)}=${Uri.encodeQueryComponent(value!)}');
                 });
 
-                _controller.future.then((controller) async {
-                  await controller.loadRequest(WebViewRequest(
-                    method: WebViewRequestMethod.post,
-                    uri: Uri.parse(urlCas),
-                    body: Uint8List.fromList(utf8.encode(parts.join('&'))),
-                    headers: { 'content-type': 'application/x-www-form-urlencoded' }
-                  ));
-
-                  await controller.loadUrl(urlPronote);
-                });
+                bool isFirstPage = true;
+                late WebViewController _controller;
 
                 return WebView(
                   debuggingEnabled: true,
                   javascriptMode: JavascriptMode.unrestricted,
                   onWebViewCreated: (controller) async {
-                    _controller.complete(controller);
-                  }
+                    _controller = controller;
+
+                    await controller.loadRequest(WebViewRequest(
+                        method: WebViewRequestMethod.post,
+                        uri: Uri.parse(urlCas),
+                        body: Uint8List.fromList(utf8.encode(parts.join('&'))),
+                        headers: { 'content-type': 'application/x-www-form-urlencoded' }
+                    ));
+                  },
+                  onPageFinished: (_) {
+                    if (isFirstPage) {
+                      _controller.loadUrl(urlPronote);
+                      isFirstPage = false;
+                    }
+                  },
                 );
               }
 

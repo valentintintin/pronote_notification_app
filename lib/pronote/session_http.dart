@@ -6,14 +6,14 @@ class SessionHttp {
   Map<String, String> headers = {};
 
   Future<http.Response> get(String url) async {
-    //debugPrint('Request GET ' + url);
+    debugPrint('Request GET ' + url);
     http.Response response = await http.get(Uri.parse(url), headers: headers);
     updateCookie(response);
     return response;
   }
 
   Future<http.Response> post(String url, dynamic data) async {
-    //debugPrint('Request POST ' + url + ' ' + (data?.toString() ?? ''));
+    debugPrint('Request POST ' + url + ' ' + (data?.toString() ?? ''));
     http.Response response = await http.post(Uri.parse(url), body: data, headers: headers);
     updateCookie(response);
     return response;
@@ -32,7 +32,7 @@ class SessionHttp {
         return;
       }
       
-      //debugPrint('COOKIE : ' + response.request.toString() + ' ' + cookie);
+      debugPrint('COOKIE : ' + response.request.toString() + ' ' + cookie);
 
       headers['cookie'] = cookie;
     }
