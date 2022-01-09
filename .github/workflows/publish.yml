@@ -33,7 +33,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: build/app/outputs/flutter-apk/app-release.apk
-          body: github.event.commits[0].message
+          body: ${{ github.event.head_commit.message }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to Firebase
@@ -43,4 +43,4 @@ jobs:
           token: ${{secrets.FIREBASE_TOKEN}}
           groups: valentin.s.10@gmail.com
           file: build/app/outputs/flutter-apk/app-release.apk
-          releaseNotesFile: github.event.commits[0].message
+          releaseNotes: ${{ github.event.head_commit.message }}

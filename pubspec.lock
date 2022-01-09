@@ -120,6 +120,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.6.6"
+  disable_battery_optimization:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "5619cbe0cd75ee8205a51ca6fe941ef9b96eaed6"
+      url: "git@github.com:venkateshironman/Disable-Battery-Optimizations.git"
+    source: git
+    version: "0.1.2"
   fake_async:
     dependency: transitive
     description:

@@ -88,6 +88,12 @@ class SessionPronote {
     isAuthenticated = true;
   }
   
+  String getTokenCas() {
+    _checkIsAuthenticatedCas();
+    
+    return _sessionHttp.getCookie()!;
+  }
+  
   String getUserFullName() {
     _checkIsAuthenticated();
 
@@ -98,6 +104,12 @@ class SessionPronote {
     _checkIsAuthenticated();
 
     return user.school?.nameValue?.name; 
+  }
+  
+  String? getStudentGroupName() {
+    _checkIsAuthenticated();
+
+    return user.studentGroupName?.name; 
   }
 
   Future<ExamsList?> getLastsMark() async {
@@ -189,7 +201,7 @@ class SessionPronote {
     }
 
     String responseBody = response.body;
-
+    
     String body = responseBody.replaceAll(' ', '').replaceAll('\'', '"');
     String from = 'Start(';
     String to = ')}catch';

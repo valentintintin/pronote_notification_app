@@ -10,7 +10,6 @@ class SessionHttpFake extends SessionHttp {
   Future<http.Response> get(String url) async {
     //debugPrint('Request GET ' + url);
     http.Response response = await _doFake('GET', url);
-    updateCookie(response);
     return response;
   }
 
@@ -18,7 +17,6 @@ class SessionHttpFake extends SessionHttp {
   Future<http.Response> post(String url, dynamic data) async {
     //debugPrint('Request POST ' + url + ' ' + (data?.toString() ?? ''));
     http.Response response = await _doFake('POST', url, data: data);
-    updateCookie(response);
     return response;
   }
   
@@ -40,5 +38,15 @@ class SessionHttpFake extends SessionHttp {
       print(e.toString());
       return http.Response(e.toString(), 500, request: request); 
     }
+  }
+
+  @override
+  bool hasCookie() {
+    return number > 1;
+  }
+
+  @override
+  String? getCookie() {
+    return hasCookie() ? 'cookie' : null;
   }
 }

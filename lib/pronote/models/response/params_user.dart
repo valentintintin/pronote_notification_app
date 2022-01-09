@@ -31,7 +31,7 @@ class ParamsUserRessource extends JsonObject {
     this.ine,
     this.g,
     this.p,
-    this.classeDEleve,
+    this.studentGroupName,
     this.school,
     this.listeOngletsPourPeriodes,
   });
@@ -40,7 +40,7 @@ class ParamsUserRessource extends JsonObject {
   final String? ine;
   final int? g;
   final int? p;
-  final NameObject? classeDEleve;
+  final NameObject? studentGroupName;
   final Etablissement? school;
   final ListeOngletsPourPeriodes? listeOngletsPourPeriodes;
 
@@ -54,7 +54,7 @@ class ParamsUserRessource extends JsonObject {
     ine: json["N"],
     g: json["G"],
     p: json["P"],
-    classeDEleve: json["classeDEleve"] == null ? null : NameObject.fromJson(json["classeDEleve"]),
+    studentGroupName: json["classeDEleve"] == null ? null : NameObject.fromJson(json["classeDEleve"]),
     school: json["Etablissement"] == null ? null : Etablissement.fromJson(json["Etablissement"]),
     listeOngletsPourPeriodes: json["listeOngletsPourPeriodes"] == null ? null : ListeOngletsPourPeriodes.fromJson(json["listeOngletsPourPeriodes"]),
   );
@@ -65,7 +65,7 @@ class ParamsUserRessource extends JsonObject {
     "N": ine,
     "G": g,
     "P": p,
-    "classeDEleve": classeDEleve == null ? null : classeDEleve!.toJson(),
+    "classeDEleve": studentGroupName == null ? null : studentGroupName!.toJson(),
     "Etablissement": school == null ? null : school!.toJson(),
     "listeOngletsPourPeriodes": listeOngletsPourPeriodes == null ? null : listeOngletsPourPeriodes!.toJson(),
   };

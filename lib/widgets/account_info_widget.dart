@@ -16,6 +16,7 @@ class _AccountInfoWidgetState extends State<AccountInfoWidget> {
 
   String? userFullName;
   String? schoolName;
+  String? studentGroupName;
   
   @override
   void initState() {
@@ -23,6 +24,7 @@ class _AccountInfoWidgetState extends State<AccountInfoWidget> {
       setState(() {
         userFullName = session?.getUserFullName();
         schoolName = session?.getSchoolName();
+        studentGroupName = session?.getStudentGroupName();
       });
     });
   }
@@ -50,6 +52,7 @@ class _AccountInfoWidgetState extends State<AccountInfoWidget> {
                   children: [
                     Text('Élève : ' + (userFullName ?? 'inconnu'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),),
                     Text('Établissement : ' + (schoolName ?? 'inconnu'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),),
+                    Text('Classe : ' + (studentGroupName ?? 'inconnu'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),),
                   ],
                 )
               ),

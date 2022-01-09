@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
@@ -7,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:pronote_notification/service.dart';
 import 'package:pronote_notification/widgets/webview_pronote_page_widget.dart';
+import 'package:disable_battery_optimization/disable_battery_optimization.dart';
 
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget({Key? key}) : super(key: key);
@@ -52,6 +52,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     pronoteUrl = prefs.getString('pronoteUrl') ?? pronoteUrls.first.value;
     interval = prefs.getInt('interval') ?? interval;
     check = prefs.getBool('check') ?? true;
+    
+    if (check) {
+      checkBatteryOptimisationDisabled();
+    }
   }
 
   @override
@@ -210,6 +214,19 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                                     child: const Text('Reset'),
                                   )
                               ) : Container(),
+                              kDebugMode ? Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      await runAlarm();
+                                      
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Ok')),
+                                      );
+                                    },
+                                    child: const Text('Run alarm'),
+                                  )
+                              ) : Container(),
                             ],
                           )
                         ],
@@ -271,6 +288,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Connexion réussie et vérification activée')),
           );
+
+          checkBatteryOptimisationDisabled();
         }
       } catch(e) {
         showOkDialog(context, "Erreur", e.toString());
@@ -280,5 +299,13 @@ class _SettingsWidgetState extends State<SettingsWidget> {
         loadingInProgress = false;
       });
     }
+  }
+  
+  void checkBatteryOptimisationDisabled() {
+    DisableBatteryOptimization.showDisableAllOptimizationsSettings(
+        'Activer le démarrage automatique de l\'application',
+        'Suivez les instructions pour activer le démarrage automatique de l\'application',
+        'Votre téléphone a des optimisations de batterie en plus',
+        'Suivz les instructions pour désactiver les optimisations de la batterie pour que la vérification se fasse bien quand il faut');
   }
 }

@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="fr.valentin_saugnier.pronote_notification">
+    package="fr.valentin_saugnier.pronote_notification"
+    xmlns:tools="http://schemas.android.com/tools">
    <application
+        tools:replace="android:label"
         android:name="io.flutter.app.FlutterApplication"
         android:label="Pronote notification"
         android:icon="@mipmap/ic_launcher">

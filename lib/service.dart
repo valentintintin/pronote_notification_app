@@ -76,13 +76,13 @@ Future<SessionPronote> authPronote({ forceAuth = false }) async {
   return lastSessionPronote!;
 }
 
-void runAlarm() {
+Future<void> runAlarm() async {
   checkNetwork();
   
   for (int i = 0; i < 3; i++) {
     try {
-      checkNewMark(forceAuth: true);
-      checkNewCanceledClasses(forceAuth: false);
+      await checkNewMark(forceAuth: true);
+      await checkNewCanceledClasses(forceAuth: false);
       break; // exit loop
     }
     on ClientException catch (e) {

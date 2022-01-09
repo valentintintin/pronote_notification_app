@@ -1,16 +1,19 @@
-import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pronote_notification/service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class WebViewPronotePageWidget extends StatelessWidget {
+class WebViewPronotePageWidget extends StatefulWidget {
   WebViewPronotePageWidget({Key? key}) : super(key: key);
-  
-  Widget build(BuildContext context) {    
+
+  @override
+  State<WebViewPronotePageWidget> createState() => _WebViewPronotePageWidgetState();
+}
+
+class _WebViewPronotePageWidgetState extends State<WebViewPronotePageWidget> {
+  Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: const Text("Site Pronote"),
@@ -23,14 +26,12 @@ class WebViewPronotePageWidget extends StatelessWidget {
                   showOkDialog(context, 'Erreur accès Pronote', sessionPronoteSnapshot.error.toString());
                   Navigator.of(context).pop();
                 }
-                
+
                 String urlCas = sessionPronoteSnapshot.data!['urlPost']!;
                 String urlPronote = sessionPronoteSnapshot.data!['urlPronote']!;
                 sessionPronoteSnapshot.data!.remove('urlPost');
                 sessionPronoteSnapshot.data!.remove('urlPronote');
-                
-                debugPrint('Direction ' + urlCas);
-                
+
                 List<String> parts = [];
                 sessionPronoteSnapshot.data!.forEach((key, value) {
                   parts.add('${Uri.encodeQueryComponent(key!)}=${Uri.encodeQueryComponent(value!)}');
@@ -39,7 +40,7 @@ class WebViewPronotePageWidget extends StatelessWidget {
                 bool isFirstPage = true;
                 late WebViewController _controller;
 
-                return WebView(
+                WebView webview = WebView(
                   debuggingEnabled: true,
                   javascriptMode: JavascriptMode.unrestricted,
                   onWebViewCreated: (controller) async {
@@ -52,13 +53,35 @@ class WebViewPronotePageWidget extends StatelessWidget {
                         headers: { 'content-type': 'application/x-www-form-urlencoded' }
                     ));
                   },
-                  onPageFinished: (_) {
+                  onPageStarted: (url) {
+                    debugPrint('WebView start ' + url);
+                  },
+                  onPageFinished: (url) {
+                    debugPrint('WebView finish ' + url + ' ' + isFirstPage.toString());
+
                     if (isFirstPage) {
                       _controller.loadUrl(urlPronote);
                       isFirstPage = false;
                     }
-                  },
+                  }
                 );
+                
+                return /*isFirstPage ? Center(
+                    child: Column(
+                        children: [
+                          const SizedBox(
+                            width: 60,
+                            height: 60,
+                            child: CircularProgressIndicator(),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(top: 16),
+                            child: Text('Connexion à Pronote en cours. 2/2'),
+                          ),
+                          SizedBox(child: webview, width: 1, height: 1,)
+                        ]
+                    )
+                ) : */webview;
               }
 
               return Center(
@@ -71,7 +94,7 @@ class WebViewPronotePageWidget extends StatelessWidget {
                         ),
                         Padding(
                           padding: EdgeInsets.only(top: 16),
-                          child: Text('Connexion en cours'),
+                          child: Text('Connexion à l\'académie en cours. 1/2'),
                         )
                       ]
                   )
