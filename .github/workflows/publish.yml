@@ -41,6 +41,7 @@ jobs:
         with:
           appId: ${{secrets.FIREBASE_APP_ID}}
           token: ${{secrets.FIREBASE_TOKEN}}
-          groups: valentin.s.10@gmail.com
+          groups: Me
           file: build/app/outputs/flutter-apk/app-release.apk
           releaseNotes: ${{ github.event.head_commit.message }}
+          debug: true

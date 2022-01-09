@@ -125,8 +125,8 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "5619cbe0cd75ee8205a51ca6fe941ef9b96eaed6"
-      url: "git@github.com:venkateshironman/Disable-Battery-Optimizations.git"
+      resolved-ref: "46d97a0bc2a834d4101c5af34d7e419860064f7b"
+      url: "https://github.com/valentintintin/Disable-Battery-Optimizations.git"
     source: git
     version: "0.1.2"
   fake_async:

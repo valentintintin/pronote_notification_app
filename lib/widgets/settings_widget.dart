@@ -34,7 +34,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     value: e,
   )).toList();
 
-  bool firstLoadSharedPreferencies = true;
   bool loadingInProgress = false;
 
   String? username;
@@ -52,14 +51,14 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     pronoteUrl = prefs.getString('pronoteUrl') ?? pronoteUrls.first.value;
     interval = prefs.getInt('interval') ?? interval;
     check = prefs.getBool('check') ?? true;
-    
-    if (check) {
-      checkBatteryOptimisationDisabled();
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (check) {
+      checkBatteryOptimisationDisabled();
+    }
+    
     return Card(
         elevation: 10,
         child: Padding(
@@ -289,7 +288,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             const SnackBar(content: Text('Connexion réussie et vérification activée')),
           );
 
-          checkBatteryOptimisationDisabled();
+          await checkBatteryOptimisationDisabled();
         }
       } catch(e) {
         showOkDialog(context, "Erreur", e.toString());
@@ -301,11 +300,13 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     }
   }
   
-  void checkBatteryOptimisationDisabled() {
-    DisableBatteryOptimization.showDisableAllOptimizationsSettings(
+  Future<void> checkBatteryOptimisationDisabled() async {
+    print('Try to ask to disable battery optimizations');
+    await DisableBatteryOptimization.showDisableAllOptimizationsSettings(
         'Activer le démarrage automatique de l\'application',
         'Suivez les instructions pour activer le démarrage automatique de l\'application',
         'Votre téléphone a des optimisations de batterie en plus',
         'Suivz les instructions pour désactiver les optimisations de la batterie pour que la vérification se fasse bien quand il faut');
+    print('Battery optimizations asked');
   }
 }
