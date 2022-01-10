@@ -11,6 +11,7 @@ import 'package:pointycastle/export.dart';
 import 'package:pointycastle/pointycastle.dart';
 import 'package:pronote_notification/pronote/cipher_account.dart';
 import 'package:pronote_notification/pronote/models/request_data.dart';
+import 'package:pronote_notification/pronote/models/requests/agenda.dart';
 import 'package:pronote_notification/pronote/models/requests/authentification.dart';
 import 'package:pronote_notification/pronote/models/requests/identification.dart';
 import 'package:pronote_notification/pronote/models/requests/navigation.dart';
@@ -125,11 +126,25 @@ class SessionPronote {
 
   Future<List<Class>?> getLastCanceledClasses() async {
     _checkIsAuthenticated();
+
+    DonneesAgenda agenda = await _getAgendaPage();
+    List<Class> lastCanceledClasses = <Class>[];
     
-    List<Class>? lastCanceledClasses = (await _getAgendaPage()).classes
-        ?.where((classe) => classe.isCanceled == true)
-        .toList();
-    if (lastCanceledClasses != null && lastCanceledClasses.isNotEmpty == true) {
+    if (agenda.classes?.isNotEmpty == true) {
+      lastCanceledClasses.addAll(agenda.classes
+          !.where((course) => course.isCanceled == true));
+    }
+    
+    if (agenda.absences?.joursCycle?.jourCycle?.isNotEmpty == true) {
+      agenda = await _getAgendaPage(weekNumber: agenda.absences!.joursCycle!.jourCycle!.first.numeroSemaine! + 1);
+
+      if (agenda.classes?.isNotEmpty == true) {
+        lastCanceledClasses.addAll(agenda.classes
+        !.where((course) => course.isCanceled == true));
+      }
+    }
+
+    if (lastCanceledClasses.isNotEmpty == true) {
       lastCanceledClasses.sort((a, b) => b.date!.value!.compareTo(a.date!.value!));
       return lastCanceledClasses;
     }
@@ -304,11 +319,12 @@ class SessionPronote {
     return RequestData<HomePage>.fromRawJson(response, (json) => HomePage.fromJson(json)).donneesSec!.donnees!;
   }
 
-  Future<DonneesAgenda> _getAgendaPage() async {
-    String response = await request('PageEmploiDuTemps', RequestDonneesSec(
+  Future<DonneesAgenda> _getAgendaPage({ int? weekNumber }) async {
+    String response = await request('PageEmploiDuTemps', RequestDonneesSec<DonneesAgendaRequest>(
         signature: RequestDonneesSignature(
           onglet: _currentPage
-        ) 
+        ),
+        donnees: weekNumber != null ? DonneesAgendaRequest(NumeroSemaine: weekNumber, numeroSemaine: weekNumber) : null 
     ));
 
     return RequestData<DonneesAgenda>.fromRawJson(response, (json) => DonneesAgenda.fromJson(json)).donneesSec!.donnees!;

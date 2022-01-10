@@ -8,10 +8,12 @@ class DonneesAgenda extends JsonObject {
   DonneesAgenda({
     this.avecCoursAnnule,
     this.classes,
+    this.absences,
   });
 
   final bool? avecCoursAnnule;
   final List<Class>? classes;
+  final Absences? absences;
 
   factory DonneesAgenda.fromRawJson(String str) => DonneesAgenda.fromJson(json.decode(str));
 
@@ -21,12 +23,14 @@ class DonneesAgenda extends JsonObject {
   factory DonneesAgenda.fromJson(Map<String, dynamic> json) => DonneesAgenda(
     avecCoursAnnule: json["avecCoursAnnule"],
     classes: json["ListeCours"] == null ? null : List<Class>.from(json["ListeCours"].map((x) => Class.fromJson(x))),
+    absences: Absences.fromJson(json["absences"]),
   );
 
   @override
   Map<String, dynamic> toJson() => {
     "avecCoursAnnule": avecCoursAnnule,
     "ListeCours": classes == null ? null : List<dynamic>.from(classes!.map((x) => x.toJson())),
+    "absences": absences?.toJson(),
   };
 }
 
@@ -134,5 +138,73 @@ class ClassContentList extends JsonObject {
   Map<String, dynamic> toJson() => {
     "_T": id,
     "V": contents == null ? null : List<dynamic>.from(contents!.map((x) => x.toJson())),
+  };
+}
+
+class Absences extends JsonObject {
+  Absences({
+    this.joursCycle,
+  });
+
+  final JoursCycle? joursCycle;
+
+  factory Absences.fromRawJson(String str) => Absences.fromJson(json.decode(str));
+
+  String toRawJson() => json.encode(toJson());
+
+  factory Absences.fromJson(Map<String, dynamic> json) => Absences(
+    joursCycle: JoursCycle.fromJson(json["joursCycle"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "joursCycle": joursCycle != null ? joursCycle!.toJson() : null,
+  };
+}
+
+class JoursCycle extends JsonObject {
+  JoursCycle({
+    this.t,
+    this.jourCycle,
+  });
+
+  final int? t;
+  final List<JoursCycleV>? jourCycle;
+
+  factory JoursCycle.fromRawJson(String str) => JoursCycle.fromJson(json.decode(str));
+
+  String toRawJson() => json.encode(toJson());
+
+  factory JoursCycle.fromJson(Map<String, dynamic> json) => JoursCycle(
+    t: json["_T"],
+    jourCycle: List<JoursCycleV>.from(json["V"].map((x) => JoursCycleV.fromJson(x))),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "_T": t,
+    "V": jourCycle != null ? List<dynamic>.from(jourCycle!.map((x) => x.toJson())) : null,
+  };
+}
+
+class JoursCycleV extends JsonObject {
+  JoursCycleV({
+    this.jourCycle,
+    this.numeroSemaine,
+  });
+
+  final int? jourCycle;
+  final int? numeroSemaine;
+
+  factory JoursCycleV.fromRawJson(String str) => JoursCycleV.fromJson(json.decode(str));
+
+  String toRawJson() => json.encode(toJson());
+
+  factory JoursCycleV.fromJson(Map<String, dynamic> json) => JoursCycleV(
+    jourCycle: json["jourCycle"],
+    numeroSemaine: json["numeroSemaine"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "jourCycle": jourCycle,
+    "numeroSemaine": numeroSemaine,
   };
 }

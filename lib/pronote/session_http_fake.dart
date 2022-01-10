@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:pronote_notification/pronote/session_http.dart';
@@ -22,22 +23,23 @@ class SessionHttpFake extends SessionHttp {
   
   Future<http.Response> _doFake(String method, String url, {dynamic data}) async {
     http.Request request = http.Request(method, Uri.parse(url));
+    
+    for (int i = 0; i < 3; i++) {
+      debugPrint('Use fake request ' + number.toString() + ' for ' + url);
 
-    try {
-      String requestBody = await rootBundle.loadString('assets/fakes/' + number.toString() + '_request.json');
-      //debugPrint('Request wanted ' + method + ' ' + url + ' ' + requestBody);
-    } catch (e) {
-      // ignored
+      try {
+        ByteData fileBody = await rootBundle.load('assets/fakes/' + number.toString() + '.txt');
+        return http.Response.bytes(fileBody.buffer.asInt8List(), 200, request: request);
+      } 
+      catch (e) {
+        // ignored
+      }
+      finally {
+        number++;
+      }
     }
     
-    try {
-      ByteData fileBody = await rootBundle.load('assets/fakes/' + (number++).toString() + '.txt');
-      
-      return http.Response.bytes(fileBody.buffer.asInt8List(), 200, request: request);
-    } catch (e) {
-      print(e.toString());
-      return http.Response(e.toString(), 500, request: request); 
-    }
+    return http.Response('No fake response found', 500, request: request);
   }
 
   @override
