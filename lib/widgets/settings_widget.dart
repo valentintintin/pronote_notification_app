@@ -51,14 +51,14 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     pronoteUrl = prefs.getString('pronoteUrl') ?? pronoteUrls.first.value;
     interval = prefs.getInt('interval') ?? interval;
     check = prefs.getBool('check') ?? true;
-  }
-
-  @override
-  Widget build(BuildContext context) {
+    
     if (check) {
       checkBatteryOptimisationDisabled();
     }
-    
+  }
+
+  @override
+  Widget build(BuildContext context) {    
     return Card(
         elevation: 10,
         child: Padding(
@@ -290,7 +290,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
 
           await checkBatteryOptimisationDisabled();
         }
-      } catch(e) {
+      } catch(e, stacktrace) {
+        print('Erreur : ' + e.toString() + ' ' + stacktrace.toString());
         showOkDialog(context, "Erreur", e.toString());
       }
 

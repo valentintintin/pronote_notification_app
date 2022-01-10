@@ -64,7 +64,8 @@ class _LastCanceledClassesWidgetState extends State<LastCanceledClassesWidget> {
 
                         try {
                           await checkNewCanceledClasses(force: true);
-                        } catch (e) {
+                        } catch(e, stacktrace) {
+                          print('Erreur : ' + e.toString() + ' ' + stacktrace.toString());
                           showOkDialog(context, "Erreur", e.toString());
                         }
                         

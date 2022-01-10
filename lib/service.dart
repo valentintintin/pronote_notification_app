@@ -85,11 +85,16 @@ Future<void> runAlarm() async {
       await checkNewCanceledClasses(forceAuth: false);
       break; // exit loop
     }
-    on ClientException catch (e) {
-      print('Erreur : ' + e.toString());
+    on ClientException catch (e, stacktrace) {
+      print('Erreur http client : ' + e.toString() + ' ' + stacktrace.toString());
       // continue
     }
-    catch (e) {
+    on SocketException catch (e, stacktrace) {
+      print('Erreur socket : ' + e.toString() + ' ' + stacktrace.toString());
+      // continue
+    }
+    catch (e, stacktrace) {
+      print('Erreur : ' + e.toString() + ' ' + stacktrace.toString());
       sendNotificationError(e.toString());
       rethrow;
     }
